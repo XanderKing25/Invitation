@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+            overflow: hidden;
+            -webkit-touch-callout: none;
+        }
+
+        /* --- PANTALLA DE INICIO --- */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.90);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.5s;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #start-screen h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ffb7c5;
+        }
+
+        .instructions {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 10px;
+            border: 1px solid white;
+            padding: 10px;
+            border-radius: 5px;
+            line-height: 1.6;
+        }
+
+        /* --- ESCENARIO --- */
+        .gif-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .gif-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .text-overlay {
+            position: absolute;
+            top: 55%;
+            left: 12%;
+            width: 72%;
+            height: 30%;
+            color: #0f4c81;
+            font-weight: bold;
+            line-height: 1.25;
+            overflow: hidden;
+            font-size: clamp(12px, 3.5vw, 22px);
+        }
+
+        .next-indicator {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #0f4c81;
+            animation: bounce 0.8s infinite;
+        }
+
+        /* --- FLECHAS DE NAVEGACIÓN --- */
+        .nav-arrow {
+            position: absolute;
+            top: 40%;
+            transform: translateY(-50%);
+            font-size: 40px;
+            color: rgba(15, 76, 129, 0.6);
+            z-index: 1500;
+            pointer-events: none;
+            animation: pulseArrow 2s infinite;
+            text-shadow: 0px 0px 2px white;
+        }
+        
+        .arrow-left { left: 15px; display: none; }
+        .arrow-right { right: 15px; }
+
+        /* --- ZONAS TÁCTILES --- */
+        .touch-zone {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        
+        #btn-prev { left: 0; width: 30%; }
+        #btn-next { right: 0; width: 70%; }
+
+        .touch-zone:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        @keyframes pulseArrow {
+            0%, 100% { opacity: 0.3; transform: translateY(-50%) scale(1); }
+            50% { opacity: 0.8; transform: translateY(-50%) scale(1.1); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="bgm" loop>
+        <source src="Cherry Waves.mp3" type="audio/mp3">
+    </audio>
+    <audio id="sfx-blip">
+        <source src="speaking-animal-crossing-sound-effect-made-with-Voicemod.mp3" type="audio/mp3">
+    </audio>
+
+    <div id="start-screen" onclick="iniciarExperiencia()">
+        <h1>❤ Para mi Angélica</h1>
+        <div class="instructions">
+            Toca la pantalla para comenzar.<br><br>
+            <small>(Usa audífonos 🎧)</small><br>
+            <small>Toca la derecha para avanzar ⮕</small>
+        </div>
+    </div>
+
+    <div class="gif-container" id="game-container">
+        <img src="d53ae4ba4535f828e00c082fb73aaba6.gif" alt="Personaje RPG">
+        
+        <div class="text-overlay" id="rpg-text">
+            <div class="next-indicator" id="arrow"></div>
+        </div>
+
+        <div class="nav-arrow arrow-left" id="visual-arrow-left">❮</div>
+        <div class="nav-arrow arrow-right" id="visual-arrow-right">❯</div>
+
+        <div class="touch-zone" id="btn-prev" onclick="mensajeAnterior()"></div>
+        <div class="touch-zone" id="btn-next" onclick="siguienteMensaje()"></div>
+    </div>
+
+    <script>
+        const dialogos = [
+            "¡Hola bonita! Espero hayas tenido un lindo día.",
+            "Alexander me dijo que quería disculparse por responder hasta ahora.",
+            "No se sentía muy bien ayer y llegó de trabajar hace poco.",
+            "Me contó que tienen una cita hoy...",
+            "Está bastante cansado así que me pidió ayuda para que arregle los detalles contigo.",
+            "Dice que se verán en Ecoparque.",
+            "No sé qué es eso pero escuché que hay ardillas, yo tendría cuidado con mis nueces.",
+            "Me pide que le confirmes a qué hora puedes, si a las 4 o 5 de la tarde.",
+            "Por cierto, no le digas que te dije.",
+            "Pero por alguna razón me dijo que esta canción le hace pensar en ti."
+        ];
+
+        const velocidad = 40;
+        const musica = document.getElementById('bgm');
+        const sonidoLetra = document.getElementById('sfx-blip');
+
+        sonidoLetra.volume = 0.3;
+        musica.volume = 0.5;
+
+        const contenedorTexto = document.getElementById('rpg-text');
+        const flechaIzquierdaVisual = document.getElementById('visual-arrow-left');
+        const flechaDerechaVisual = document.getElementById('visual-arrow-right');
+        let flechaHTML = '<div class="next-indicator" id="arrow"></div>';
+
+        let indiceDialogo = 0;
+        let indiceCaracter = 0;
+        let estaEscribiendo = false;
+        let timer;
+
+        function iniciarExperiencia() {
+            document.getElementById('start-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('game-container').style.opacity = '1';
+                // NOTA: Ya NO reproducimos música aquí
+                escribirLinea();
+            }, 500);
+        }
+
+        function reproducirBlip() {
+            if (estaEscribiendo) {
+                sonidoLetra.currentTime = 0;
+                sonidoLetra.play().catch(() => { });
+            }
+        }
+
+        function actualizarFlechasVisuales() {
+            if (indiceDialogo === 0) {
+                flechaIzquierdaVisual.style.display = 'none';
+            } else {
+                flechaIzquierdaVisual.style.display = 'block';
+            }
+        }
+
+        function escribirLinea() {
+            estaEscribiendo = true;
+            actualizarFlechasVisuales();
+
+            const mensajeActual = dialogos[indiceDialogo];
+
+            if (indiceCaracter < mensajeActual.length) {
+                contenedorTexto.innerHTML = mensajeActual.substring(0, indiceCaracter + 1) + flechaHTML;
+                if (indiceCaracter % 2 === 0) reproducirBlip();
+                indiceCaracter++;
+                timer = setTimeout(escribirLinea, velocidad);
+            } else {
+                terminarLinea();
+            }
+        }
+
+        function terminarLinea() {
+            clearTimeout(timer);
+            estaEscribiendo = false;
+            sonidoLetra.pause();
+            sonidoLetra.currentTime = 0;
+            contenedorTexto.innerHTML = dialogos[indiceDialogo] + flechaHTML;
+            const flecha = document.getElementById('arrow');
+            if (flecha) flecha.style.display = 'block';
+        }
+
+        function siguienteMensaje() {
+            if (estaEscribiendo) {
+                terminarLinea();
+                return;
+            }
+
+            if (indiceDialogo < dialogos.length - 1) {
+                indiceDialogo++;
+                resetearYAnimar();
+            } else {
+                // --- AQUÍ ES EL FINAL ---
+                // 1. Reproducimos la canción
+                musica.play().catch(e => console.log("Error play:", e));
+                
+                // 2. Mostramos mensaje final
+                contenedorTexto.innerHTML = "<div style='text-align:center; margin-top:10%'>❤<br><i>(Un abrazo)</i></div>";
+                
+                // 3. Ocultamos las flechas para limpiar la pantalla
+                flechaIzquierdaVisual.style.display = 'none';
+                flechaDerechaVisual.style.display = 'none';
+            }
+        }
+
+        function mensajeAnterior() {
+            if (indiceDialogo > 0) {
+                indiceDialogo--;
+                resetearYAnimar();
+            }
+        }
+
+        function resetearYAnimar() {
+            sonidoLetra.pause();
+            sonidoLetra.currentTime = 0;
+            clearTimeout(timer);
+            indiceCaracter = 0;
+            contenedorTexto.innerHTML = "";
+            escribirLinea();
+        }
+
+        document.addEventListener('keydown', function (event) {
+            const key = event.key.toLowerCase();
+            if (event.code === 'Space' || key === 'd' || key === 'arrowright') {
+                siguienteMensaje();
+            }
+            else if (key === 'a' || key === 'arrowleft') {
+                mensajeAnterior();
+            }
+        });
+    </script>
+</body>
+
+</html>
