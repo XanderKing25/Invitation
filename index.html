@@ -27,21 +27,28 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.90);
             z-index: 2000;
+            
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            
+            /* --- CORRECCIÓN DE CENTRADO --- */
+            box-sizing: border-box; /* Esto evita que el padding descuadre el centro */
+            padding: 20px;
+            text-align: center;
+            /* ----------------------------- */
+
             color: white;
             cursor: pointer;
             transition: opacity 0.5s;
-            text-align: center;
-            padding: 20px;
         }
 
         #start-screen h1 {
             font-size: 24px;
             margin-bottom: 20px;
             color: #ffb7c5;
+            line-height: 1.2; /* Ayuda a que los títulos largos no se monten */
         }
 
         .instructions {
@@ -52,6 +59,7 @@
             padding: 10px;
             border-radius: 5px;
             line-height: 1.6;
+            max-width: 90%; /* Asegura que el texto no toque los bordes */
         }
 
         /* --- ESCENARIO --- */
@@ -74,7 +82,7 @@
         .text-overlay {
             position: absolute;
             top: 55%;
-            left: 12%;
+            left: 14%;
             width: 72%;
             height: 30%;
             color: #0f4c81;
@@ -144,7 +152,7 @@
 <body>
 
     <audio id="bgm" loop>
-        <source src="Cherry Waves.mp3" type="audio/mp3">
+        <source src="Knightss.mp3" type="audio/mp3">
     </audio>
     <audio id="sfx-blip">
         <source src="speaking-animal-crossing-sound-effect-made-with-Voicemod.mp3" type="audio/mp3">
@@ -180,18 +188,17 @@
             "No se sentía muy bien ayer y llegó de trabajar hace poco.",
             "Me contó que tienen una cita hoy...",
             "Está bastante cansado así que me pidió ayuda para que arregle los detalles contigo.",
-            "Dice que se verán en Ecoparque.",
+            "Dice que se verán en ecoparque",
             "No sé qué es eso pero escuché que hay ardillas, yo tendría cuidado con mis nueces.",
-            "Me pide que le confirmes a qué hora puedes, si a las 4 o 5 de la tarde.",
-            "Por cierto, no le digas que te dije.",
-            "Pero por alguna razón me dijo que esta canción le hace pensar en ti."
+            "Me pide que le confirmes a qué hora puedes, si a las 4 o 5 de la tarde."
         ];
 
         const velocidad = 40;
         const musica = document.getElementById('bgm');
         const sonidoLetra = document.getElementById('sfx-blip');
 
-        sonidoLetra.volume = 0.3;
+        // VOLUMEN ALTO
+        sonidoLetra.volume = 1.0; 
         musica.volume = 0.5;
 
         const contenedorTexto = document.getElementById('rpg-text');
@@ -209,7 +216,6 @@
             setTimeout(() => {
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('game-container').style.opacity = '1';
-                // NOTA: Ya NO reproducimos música aquí
                 escribirLinea();
             }, 500);
         }
@@ -265,14 +271,9 @@
                 indiceDialogo++;
                 resetearYAnimar();
             } else {
-                // --- AQUÍ ES EL FINAL ---
-                // 1. Reproducimos la canción
+                // FINAL
                 musica.play().catch(e => console.log("Error play:", e));
-                
-                // 2. Mostramos mensaje final
                 contenedorTexto.innerHTML = "<div style='text-align:center; margin-top:10%'>❤<br><i>(Un abrazo)</i></div>";
-                
-                // 3. Ocultamos las flechas para limpiar la pantalla
                 flechaIzquierdaVisual.style.display = 'none';
                 flechaDerechaVisual.style.display = 'none';
             }
